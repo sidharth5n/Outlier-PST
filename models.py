@@ -23,8 +23,10 @@ class Node:
     def setNext(self, sibling):
         """Sets the next pointer to the next sibling"""
         self.next = sibling
-    
-    def setProb(self, )
+
+    def setCount(self, count):
+        """Sets the count of the data or key associated with the node"""
+        self.count = count
 
     def getData(self):
         """Returns the data or key associated with the node"""
@@ -58,7 +60,7 @@ class PST:
 
     def fit(self, data, size):
         """ Build a tree on the given data
-        
+
         Parameters
         ----------
         data : List or str
@@ -66,7 +68,7 @@ class PST:
         size : int
                Maximum depth of tree or length of buffer
         """
-        
+
         # Check input data types
         if not (isinstance(data, list) or isinstance(data, str)):
             raise Exception("Data should be string or list, but given {}".format(type(data)))
@@ -93,7 +95,33 @@ class PST:
                         temp.setNext(current)
                         parent.setChild(temp)
                     parent = temp
+            self.counts_to_prob()
             print("Fit complete in {:0.4f} s".format(time.time() - start))
-                
-                
-        
+
+    def _counts(self):
+        """Returns the total count at each level"""
+        temp = [self.root]
+        counts = list()
+        while len(temp):
+            parent = temp.pop(0)
+            current = parent.getChild()
+            count = 0
+            while current != None:
+                count += current.getCount()
+                temp.append(current)
+                current = current.getNext()
+            counts.append(count)
+        return counts
+
+    def counts_to_prob(self):
+        """Converts the counts to probabilities"""
+        counts = self._counts()
+        temp = [self.root]
+        while len(temp):
+            parent = temp.pop(0)
+            current = parent.getChild()
+            while current != None:
+                current.setCount(current.getCount() / counts[0])
+                temp.append(current)
+                current = current.getNext()
+            counts.pop(0)
